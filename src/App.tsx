@@ -1,20 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  CheckCircle2, 
-  Phone, 
-  UserPlus, 
-  Sparkles, 
-  History, 
-  Users, 
-  Activity, 
-  Database, 
-  RefreshCw, 
-  Search,
-  Check,
-  UserCheck
-} from 'lucide-react';
-import confetti from 'canvas-confetti';
-import { 
   lookupCustomer, 
   checkInCustomer, 
   registerAndCheckIn, 
@@ -44,7 +29,6 @@ export function App() {
   const [totalMembers, setTotalMembers] = useState<number>(0);
   const [recentLogs, setRecentLogs] = useState<CheckInRecord[]>([]);
   const [searchFilter, setSearchFilter] = useState('');
-  const [counterBouncing, setCounterBouncing] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const phoneInputRef = useRef<HTMLInputElement>(null);
@@ -72,20 +56,6 @@ export function App() {
     }
   }, []);
 
-  // Trigger celebration particle effect when checked in
-  const triggerConfetti = () => {
-    try {
-      confetti({
-        particleCount: 45,
-        spread: 60,
-        origin: { y: 0.7 },
-        colors: ['#3b82f6', '#10b981', '#06b6d4', '#6366f1']
-      });
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
   // Handle Main Form Check-In Submission
   const handleCheckIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,8 +78,6 @@ export function App() {
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         });
         setTotalCheckIns(res.totalSystemCheckIns);
-        triggerConfetti();
-        triggerCounterBounce();
         await loadData();
         setPhone('');
       } else {
@@ -121,7 +89,7 @@ export function App() {
       }
     } catch (err) {
       console.error('Check in processing error:', err);
-      alert('An error occurred while checking in. Please try again.');
+      alert('An error occurred while checking in.');
     } finally {
       setLoading(false);
     }
@@ -142,24 +110,17 @@ export function App() {
       });
       setTotalCheckIns(res.totalSystemCheckIns);
       setShowRegisterModal(false);
-      triggerConfetti();
-      triggerCounterBounce();
       await loadData();
       setPhone('');
     } catch (err) {
       console.error('Registration failed:', err);
-      alert('Failed to register member. Please try again.');
+      alert('Failed to register member.');
     } finally {
       setLoading(false);
     }
   };
 
-  const triggerCounterBounce = () => {
-    setCounterBouncing(true);
-    setTimeout(() => setCounterBouncing(false), 500);
-  };
-
-  // Handle Preset Click for Demo Testing
+  // Preset quick select for testing
   const handlePresetSelect = (presetPhone: string) => {
     setPhone(presetPhone);
     if (phoneInputRef.current) {
@@ -174,37 +135,31 @@ export function App() {
 
   return (
     <div className="app-container">
-      {/* Top Header Navigation */}
+      {/* Monochrome Minimalist Header */}
       <header className="header-bar">
         <div className="brand-logo">
-          <div className="brand-icon">
-            <UserCheck size={24} />
-          </div>
+          <div className="brand-mark">✓</div>
           <div>
             <h1 className="brand-title">QuickCheck</h1>
-            <p className="brand-subtitle">Smart Phone Check-In System</p>
+            <p className="brand-subtitle">Phone Check-In Engine</p>
           </div>
         </div>
 
         <div className="backend-badge">
           <span className="status-dot" />
-          <Database size={14} />
-          <span>{isSupabaseConfigured ? 'Supabase Database' : 'Cloud DB Connected'}</span>
+          <span>{isSupabaseConfigured ? 'SUPABASE' : 'CLOUD DB'}</span>
         </div>
       </header>
 
-      {/* Main Two-Column Grid */}
+      {/* Main Grid */}
       <div className="dashboard-grid">
         
-        {/* Left Column: Check-In Form & Status */}
+        {/* Left Column: Input Form */}
         <div className="dashboard-col">
-          <div className="glass-card">
+          <div className="mono-card">
             <div className="card-header">
-              <h2 className="card-title">
-                <Phone size={20} className="text-accent-blue" />
-                Member Check-In
-              </h2>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Enter registered number</span>
+              <h2 className="card-title">Check In</h2>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>INPUT</span>
             </div>
 
             <form onSubmit={handleCheckIn}>
@@ -218,39 +173,35 @@ export function App() {
                     ref={phoneInputRef}
                     type="tel"
                     className="phone-input"
-                    placeholder="(555) 000-0000"
+                    placeholder="Enter phone number..."
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     disabled={loading}
                     required
                   />
-                  <Phone size={18} className="input-icon" />
                 </div>
               </div>
 
               <button 
                 type="submit" 
-                className="btn-primary"
+                className="btn-mono"
                 disabled={loading || !phone.trim()}
                 id="check-in-submit-button"
               >
                 {loading ? (
                   <>
                     <span className="spinner" />
-                    <span>Processing...</span>
+                    <span>Processing</span>
                   </>
                 ) : (
-                  <>
-                    <Sparkles size={18} />
-                    <span>Tap to Check In</span>
-                  </>
+                  <span>Check In →</span>
                 )}
               </button>
             </form>
 
-            {/* Presets for Quick Testing */}
+            {/* Test Presets */}
             <div className="preset-section">
-              <div className="preset-title">Quick Test Presets:</div>
+              <div className="preset-title">Presets</div>
               <div className="preset-pills">
                 <button 
                   type="button"
@@ -278,122 +229,87 @@ export function App() {
                   className="preset-chip" 
                   onClick={() => handlePresetSelect('5550199')}
                 >
-                  555-0199 (New User)
+                  555-0199 (New)
                 </button>
               </div>
             </div>
 
-            {/* Check-In Success Banner (Requirement 1 & 2) */}
+            {/* Success Card Output */}
             {lastCheckIn && (
               <div className="success-banner" id="check-in-success-banner">
-                <div className="success-header">
-                  <div className="check-icon-circle">
-                    <CheckCircle2 size={26} />
-                  </div>
-                  <div>
-                    <div className="checked-in-label">
-                      {lastCheckIn.isNew ? '🎉 New Member Registered!' : '✓ Check-In Successful'}
-                    </div>
-                    <div className="member-name">
-                      Checked in: {lastCheckIn.customer.name}
-                    </div>
-                  </div>
+                <div className="checked-in-tag">
+                  {lastCheckIn.isNew ? 'New Member Registered' : 'Checked In'}
+                </div>
+                <div className="member-name">
+                  Checked in: {lastCheckIn.customer.name}
                 </div>
 
-                <div className="checkin-meta-grid">
-                  <div className="meta-box">
-                    <div className="meta-key">Total Check-Ins</div>
-                    <div className="meta-val">#{lastCheckIn.customer.check_in_count} Lifetime</div>
-                  </div>
-                  <div className="meta-box">
-                    <div className="meta-key">Checked-In At</div>
-                    <div className="meta-val">{lastCheckIn.timestamp}</div>
-                  </div>
+                <div className="checkin-meta-inline">
+                  <div>Check-Ins: <strong>#{lastCheckIn.customer.check_in_count}</strong></div>
+                  <div>Time: <strong>{lastCheckIn.timestamp}</strong></div>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Right Column: Live Stats & Activity Feed */}
+        {/* Right Column: Counter & Activity */}
         <div className="dashboard-col">
           
-          {/* Running Count Stat Box (Requirement 1) */}
+          {/* Running Counter Stat */}
           <div className="stat-display">
-            <div className="stat-info">
-              <span className="stat-title">Total Check-Ins</span>
-              <span className={`stat-number ${counterBouncing ? 'bounce' : ''}`} id="running-counter">
+            <div>
+              <div className="stat-title">Running Count</div>
+              <div className="stat-number" id="running-counter">
                 {totalCheckIns}
-              </span>
+              </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div className="stat-badge" style={{ marginBottom: '0.4rem' }}>
-                <Activity size={14} style={{ display: 'inline', marginRight: '6px' }} />
-                System Active
-              </div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                <Users size={12} style={{ display: 'inline', marginRight: '4px' }} />
-                {totalMembers} Total Members
-              </div>
+            <div style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              {totalMembers} Members
             </div>
           </div>
 
-          {/* Activity Logs Card */}
-          <div className="glass-card">
+          {/* Activity Feed */}
+          <div className="mono-card">
             <div className="card-header">
-              <h2 className="card-title">
-                <History size={20} className="text-accent-emerald" />
-                Recent Activity
-              </h2>
-
+              <h2 className="card-title">Activity Log</h2>
               <button 
                 className="preset-chip" 
                 onClick={loadData}
                 disabled={refreshing}
-                title="Refresh logs"
-                style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
               >
-                <RefreshCw size={12} className={refreshing ? 'spinner' : ''} />
-                Refresh
+                {refreshing ? 'Refreshing...' : 'Refresh'}
               </button>
             </div>
 
             {/* Filter Input */}
             <div className="form-group" style={{ marginBottom: '1rem' }}>
-              <div className="input-wrapper">
-                <input
-                  type="text"
-                  className="phone-input"
-                  style={{ paddingLeft: '2.4rem', fontSize: '0.88rem', padding: '0.6rem 0.8rem 0.6rem 2.4rem' }}
-                  placeholder="Filter by name or phone..."
-                  value={searchFilter}
-                  onChange={(e) => setSearchFilter(e.target.value)}
-                />
-                <Search size={14} className="input-icon" style={{ left: '0.8rem' }} />
-              </div>
+              <input
+                type="text"
+                className="phone-input"
+                style={{ fontSize: '0.82rem', padding: '0.5rem 0.75rem' }}
+                placeholder="Filter logs..."
+                value={searchFilter}
+                onChange={(e) => setSearchFilter(e.target.value)}
+              />
             </div>
 
             {/* Activity Stream List */}
             <div className="feed-list">
               {filteredLogs.length === 0 ? (
-                <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                  No check-in history found. Perform a check-in to see activity.
+                <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                  No activity recorded.
                 </div>
               ) : (
                 filteredLogs.map((log) => (
                   <div key={log.id} className="feed-item">
-                    <div className="feed-user-info">
-                      <div className="avatar-circle">
-                        {log.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <div className="feed-name">{log.name}</div>
-                        <div className="feed-phone">{formatPhoneDisplay(log.phone)}</div>
-                      </div>
+                    <div>
+                      <div className="feed-name">{log.name}</div>
+                      <div className="feed-phone">{formatPhoneDisplay(log.phone)}</div>
                     </div>
 
-                    <div className="feed-meta">
-                      <div className="feed-badge">Check-in #{log.check_in_number}</div>
+                    <div>
+                      <div className="feed-badge">#{log.check_in_number}</div>
                       <div className="feed-time">
                         {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
@@ -407,46 +323,37 @@ export function App() {
         </div>
       </div>
 
-      {/* Bonus Requirement 3: New Member Prompt Modal */}
+      {/* Bonus Modal */}
       {showRegisterModal && (
         <div className="modal-overlay">
           <div className="modal-card">
-            <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--accent-amber)', marginBottom: '0.4rem' }}>
-                <UserPlus size={20} />
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase' }}>Phone Not Found</span>
-              </div>
-              <h3 className="modal-title">Register New Member</h3>
-              <p className="modal-desc">
-                Number <strong>{formatPhoneDisplay(pendingPhone)}</strong> is not registered. Enter member name to add & check in:
-              </p>
-            </div>
+            <div className="modal-title">New Member</div>
+            <p className="modal-desc">
+              Number <strong>{formatPhoneDisplay(pendingPhone)}</strong> is not found. Enter member name to register:
+            </p>
 
             <form onSubmit={handleRegisterSubmit}>
               <div className="form-group">
                 <label className="form-label" htmlFor="new-member-name-input">
                   Full Name
                 </label>
-                <div className="input-wrapper">
-                  <input
-                    id="new-member-name-input"
-                    ref={modalInputRef}
-                    type="text"
-                    className="phone-input"
-                    placeholder="e.g. Jane Doe"
-                    value={newMemberName}
-                    onChange={(e) => setNewMemberName(e.target.value)}
-                    disabled={loading}
-                    required
-                  />
-                  <Users size={16} className="input-icon" />
-                </div>
+                <input
+                  id="new-member-name-input"
+                  ref={modalInputRef}
+                  type="text"
+                  className="phone-input"
+                  placeholder="e.g. Jane Doe"
+                  value={newMemberName}
+                  onChange={(e) => setNewMemberName(e.target.value)}
+                  disabled={loading}
+                  required
+                />
               </div>
 
               <div className="modal-actions">
                 <button
                   type="button"
-                  className="btn-secondary"
+                  className="btn-ghost"
                   onClick={() => setShowRegisterModal(false)}
                   disabled={loading}
                 >
@@ -454,21 +361,12 @@ export function App() {
                 </button>
                 <button
                   type="submit"
-                  className="btn-primary"
+                  className="btn-mono"
+                  style={{ flex: 1 }}
                   disabled={loading || !newMemberName.trim()}
                   id="register-and-check-in-button"
                 >
-                  {loading ? (
-                    <>
-                      <span className="spinner" />
-                      <span>Saving...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Check size={18} />
-                      <span>Add & Check In</span>
-                    </>
-                  )}
+                  {loading ? 'Saving...' : 'Add & Check In'}
                 </button>
               </div>
             </form>
