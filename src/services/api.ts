@@ -88,23 +88,29 @@ const saveStore = (store: CloudDataStore) => {
 };
 
 /**
- * Standardize phone number format for consistent querying
+ * Standardize phone number format for consistent database querying.
+ * Handles country codes (+1), dashes, spaces, and parentheses.
+ * e.g. "+1 (555) 010-0101" -> "5550100101"
  */
 export function normalizePhone(rawPhone: string): string {
   const digits = rawPhone.replace(/\D/g, '');
+  // Strip leading US country code '1' if present on 11-digit numbers
+  if (digits.length === 11 && digits.startsWith('1')) {
+    return digits.slice(1);
+  }
   return digits;
 }
 
 /**
- * Format raw phone number for UI display
+ * Format raw phone number for clean UI display: (555) 012-3456
  */
 export function formatPhoneDisplay(rawPhone: string): string {
   const cleaned = normalizePhone(rawPhone);
   if (cleaned.length === 10) {
     return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
   }
-  if (cleaned.length === 11 && cleaned.startsWith('1')) {
-    return `+1 (${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7)}`;
+  if (cleaned.length === 7) {
+    return `${cleaned.slice(0, 3)}-${cleaned.slice(3)}`;
   }
   if (cleaned.length > 0) {
     return cleaned;
