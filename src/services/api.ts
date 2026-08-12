@@ -36,15 +36,23 @@ interface CloudDataStore {
   totalCheckIns: number;
 }
 
+let memoryStoreCache: CloudDataStore | null = null;
+
 const getInitialStore = (): CloudDataStore => {
-  try {
-    const raw = localStorage.getItem(CLOUD_DB_KEY);
-    if (raw) {
-      return JSON.parse(raw);
+  if (memoryStoreCache) return memoryStoreCache;
+
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const raw = window.localStorage.getItem(CLOUD_DB_KEY);
+      if (raw) {
+        memoryStoreCache = JSON.parse(raw);
+        return memoryStoreCache!;
+      }
+    } catch (e) {
+      console.error('Failed to parse fallback store', e);
     }
-  } catch (e) {
-    console.error('Failed to parse fallback store', e);
   }
+
   // Default seeded members if completely empty
   const defaultStore: CloudDataStore = {
     customers: [
@@ -58,17 +66,24 @@ const getInitialStore = (): CloudDataStore => {
     ],
     totalCheckIns: 20
   };
-  try {
-    localStorage.setItem(CLOUD_DB_KEY, JSON.stringify(defaultStore));
-  } catch {}
+
+  memoryStoreCache = defaultStore;
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      window.localStorage.setItem(CLOUD_DB_KEY, JSON.stringify(defaultStore));
+    } catch {}
+  }
   return defaultStore;
 };
 
 const saveStore = (store: CloudDataStore) => {
-  try {
-    localStorage.setItem(CLOUD_DB_KEY, JSON.stringify(store));
-  } catch (e) {
-    console.error('Failed to write store', e);
+  memoryStoreCache = store;
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      window.localStorage.setItem(CLOUD_DB_KEY, JSON.stringify(store));
+    } catch (e) {
+      console.error('Failed to write store', e);
+    }
   }
 };
 
@@ -76,7 +91,6 @@ const saveStore = (store: CloudDataStore) => {
  * Standardize phone number format for consistent querying
  */
 export function normalizePhone(rawPhone: string): string {
-  // Strip all non-digit characters
   const digits = rawPhone.replace(/\D/g, '');
   return digits;
 }
